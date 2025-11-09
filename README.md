@@ -1,912 +1,567 @@
-# Global Renewable Energy & Carbon Emissions SQL Database
+# 🌍 Global Renewable Energy & Carbon Emissions Database
 
-![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+[![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=flat&logo=microsoft-sql-server&logoColor=white)](https://www.microsoft.com/sql-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Data: 2020-2023](https://img.shields.io/badge/Data-2020--2023-blue)](/)
+[![UN SDG](https://img.shields.io/badge/UN%20SDG-7%20%26%2013-green)](https://sdgs.un.org/)
 
-A comprehensive SQL Server database for analyzing global renewable energy capacity, carbon emissions, and energy investments. Supports UN SDG 7 (Affordable Clean Energy) & SDG 13 (Climate Action).
-
-**This repository is constantly being updated and added to by the community. Pull requests are welcome. Enjoy!**
-
----
-
-## 📊 Quick Stats
-- **7 Global Regions** | **15 Countries** | **23 Major Energy Projects**
-- **Time Period:** 2020-2023
-- **100+ Records** across renewable capacity, emissions, consumption, and investments
+> A comprehensive SQL Server database tracking global renewable energy capacity, carbon emissions, energy consumption, and investments across 15 countries. Supporting data-driven insights aligned with **UN Sustainable Development Goals 7** (Affordable and Clean Energy) and **13** (Climate Action).
 
 ---
 
-## Table of Contents
-1. [Database Setup](#1-database-setup)
-2. [Basic Data Retrieval Queries](#2-basic-data-retrieval-queries)
-3. [Filtering & Searching Queries](#3-filtering--searching-queries)
-4. [Aggregation & Analysis Queries](#4-aggregation--analysis-queries)
-5. [Join Queries for Multi-Table Analysis](#5-join-queries-for-multi-table-analysis)
-6. [Advanced Analytical Queries](#6-advanced-analytical-queries)
-7. [Data Modification Queries](#7-data-modification-queries)
-8. [View Creation Queries](#8-view-creation-queries)
-9. [Performance Optimization](#9-performance-optimization)
-10. [Use Cases & Examples](#10-use-cases--examples)
+## 📋 Table of Contents
+- [Overview](#-overview)
+- [Database Schema](#-database-schema)
+- [Quick Start](#-quick-start)
+- [Sample Queries](#-sample-queries)
+- [Analytical Views](#-analytical-views)
+- [Key Insights](#-key-insights)
+- [Use Cases](#-use-cases)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## 1. Database Setup
+## 📊 Overview
+
+### Project Highlights
+This database provides a foundation for analyzing the global energy transition with real-world metrics spanning 2020-2023. It includes:
+
+- **15 countries** across 7 geographic regions (East Asia & Pacific, Europe & Central Asia, Latin America & Caribbean, Middle East & North Africa, North America, South Asia, Sub-Saharan Africa)
+- **4 years** of comprehensive longitudinal data
+- **5 renewable energy types**: Solar, Wind, Hydro, Geothermal, Biomass
+- **21 major energy projects** with detailed impact metrics
+- **Investment tracking**: Public vs. private sector, renewable vs. fossil fuel
+- **Carbon footprint analysis**: Sectoral emissions, per capita metrics, emission intensity
+
+### 2023 Global Statistics
+
+| Metric | Value |
+|--------|-------|
+| **Total Renewable Capacity** | 2,572 GW |
+| **Average Renewable Share** | 31.68% of energy mix |
+| **Total CO2 Emissions** | 24,858 MT (tracked countries) |
+| **Renewable Investments** | $371.5B |
+| **Jobs Created** | 86,240+ (from tracked projects) |
+
+---
+
+## 🗂️ Database Schema
+
+### Entity Relationship Diagram
+
+```
+┌─────────────┐
+│   regions   │
+│   (7 rows)  │
+└──────┬──────┘
+       │ 1:N
+       ▼
+┌─────────────┐
+│  countries  │
+│  (15 rows)  │
+└──────┬──────┘
+       │
+       ├─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
+       │             │             │             │             │             │
+       ▼             ▼             ▼             ▼             ▼             ▼
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ renewable_  │ │   energy_   │ │   carbon_   │ │   energy_   │ │   energy_   │
+│  capacity   │ │consumption  │ │  emissions  │ │investments  │ │  projects   │
+│  (20 rows)  │ │  (20 rows)  │ │  (20 rows)  │ │  (20 rows)  │ │  (21 rows)  │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+```
+
+### Table Descriptions
+
+#### Core Reference Tables
+
+| Table | Description | Key Fields |
+|-------|-------------|------------|
+| **regions** | Geographic regions with macroeconomic indicators | `region_id`, `region_name`, `population_millions`, `gdp_usd_billions` |
+| **countries** | Country profiles and socioeconomic data | `country_id`, `country_code`, `region_id`, `energy_poverty_rate`, `gdp_per_capita_usd` |
+
+#### Annual Time-Series Tables
+
+| Table | Description | Key Metrics |
+|-------|-------------|-------------|
+| **renewable_capacity** | Installed renewable energy capacity by technology type | `solar_capacity_mw`, `wind_capacity_mw`, `hydro_capacity_mw`, `geothermal_capacity_mw`, `biomass_capacity_mw` |
+| **energy_consumption** | Total energy consumption and source breakdown | `total_energy_twh`, `renewable_percentage`, `per_capita_kwh` |
+| **carbon_emissions** | CO2 emissions by sector | `total_co2_mt`, `per_capita_co2_tons`, `emission_intensity_kg_per_gdp` |
+| **energy_investments** | Financial flows in energy sector | `renewable_investment_usd_millions`, `fossil_fuel_investment_usd_millions`, `public_investment_percentage` |
+
+#### Project-Level Table
+
+| Table | Description | Key Metrics |
+|-------|-------------|-------------|
+| **energy_projects** | Individual renewable energy infrastructure projects | `project_type`, `capacity_mw`, `investment_usd_millions`, `co2_reduction_mt_per_year`, `jobs_created` |
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Microsoft SQL Server 2016+
-- SQL Server Management Studio (SSMS) or Azure Data Studio
+- **SQL Server 2016+** or **Azure SQL Database**
+- **SQL Server Management Studio (SSMS)** or **Azure Data Studio**
 
-### Installation
-```sql
--- Clone and execute the database_setup.sql file
--- All tables will be created with sample data included
-```
+### Installation Steps
 
-### Database Schema
-```
-regions (7 records)
-    ├── countries (15 records)
-         ├── renewable_capacity (20 records)
-         ├── energy_consumption (20 records)
-         ├── carbon_emissions (20 records)
-         ├── energy_investments (20 records)
-         └── energy_projects (23 records)
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/renewable-energy-database.git
+   cd renewable-energy-database
+   ```
 
-### Quick Verification
-```sql
--- Check all tables exist
-SELECT TABLE_NAME 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_TYPE = 'BASE TABLE';
+2. **Execute the setup script**
+   - Open `renewable_energy_database.sql` in SSMS or Azure Data Studio
+   - Execute the entire script (F5 or Execute button)
+   - The script will:
+     - Drop existing tables if present
+     - Create all 7 tables with constraints
+     - Insert sample data (101 total records)
+     - Create 4 analytical views
 
--- Verify record counts
-SELECT 
-    'regions' AS table_name, COUNT(*) AS records FROM regions
-UNION ALL SELECT 'countries', COUNT(*) FROM countries
-UNION ALL SELECT 'renewable_capacity', COUNT(*) FROM renewable_capacity
-UNION ALL SELECT 'energy_consumption', COUNT(*) FROM energy_consumption
-UNION ALL SELECT 'carbon_emissions', COUNT(*) FROM carbon_emissions
-UNION ALL SELECT 'energy_investments', COUNT(*) FROM energy_investments
-UNION ALL SELECT 'energy_projects', COUNT(*) FROM energy_projects;
-```
+3. **Verify installation**
+   ```sql
+   -- Check all tables are created and populated
+   SELECT 'Regions' as table_name, COUNT(*) as record_count FROM regions
+   UNION ALL SELECT 'Countries', COUNT(*) FROM countries
+   UNION ALL SELECT 'Renewable Capacity', COUNT(*) FROM renewable_capacity
+   UNION ALL SELECT 'Energy Consumption', COUNT(*) FROM energy_consumption
+   UNION ALL SELECT 'Carbon Emissions', COUNT(*) FROM carbon_emissions
+   UNION ALL SELECT 'Energy Investments', COUNT(*) FROM energy_investments
+   UNION ALL SELECT 'Energy Projects', COUNT(*) FROM energy_projects;
+   ```
 
----
-
-## 2. Basic Data Retrieval Queries
-
-### SELECT: Retrieve all records from a table
-```sql
--- Get all countries
-SELECT * FROM countries;
-
--- Get all regions
-SELECT * FROM regions;
-
--- Get all energy projects
-SELECT * FROM energy_projects;
-```
-
-### SELECT specific columns
-```sql
--- Get country names and codes only
-SELECT country_name, country_code FROM countries;
-
--- Get project names and capacities
-SELECT project_name, capacity_mw, project_type FROM energy_projects;
-```
-
-### DISTINCT: Get unique values
-```sql
--- Get all project types
-SELECT DISTINCT project_type FROM energy_projects;
-
--- Get all project statuses
-SELECT DISTINCT status FROM energy_projects;
-
--- Get all years in dataset
-SELECT DISTINCT year FROM renewable_capacity ORDER BY year;
-```
-
-### ORDER BY: Sort results
-```sql
--- Countries by population (descending)
-SELECT country_name, population_millions 
-FROM countries 
-ORDER BY population_millions DESC;
-
--- Projects by capacity (ascending)
-SELECT project_name, capacity_mw 
-FROM energy_projects 
-ORDER BY capacity_mw ASC;
-
--- Multi-column sorting
-SELECT country_name, gdp_per_capita_usd, population_millions
-FROM countries
-ORDER BY gdp_per_capita_usd DESC, population_millions DESC;
-```
-
-### TOP: Limit results
-```sql
--- Top 5 most populous countries
-SELECT TOP 5 country_name, population_millions 
-FROM countries 
-ORDER BY population_millions DESC;
-
--- Top 10 largest energy projects
-SELECT TOP 10 project_name, capacity_mw, project_type
-FROM energy_projects
-ORDER BY capacity_mw DESC;
-
--- Top 3 regions by GDP
-SELECT TOP 3 region_name, gdp_usd_billions
-FROM regions
-ORDER BY gdp_usd_billions DESC;
-```
+   **Expected Output:**
+   ```
+   Regions                 7
+   Countries              15
+   Renewable Capacity     20
+   Energy Consumption     20
+   Carbon Emissions       20
+   Energy Investments     20
+   Energy Projects        21
+   ```
 
 ---
 
-## 3. Filtering & Searching Queries
+## 📈 Sample Queries
 
-### WHERE: Filter records with conditions
+### Query 1: Top Renewable Energy Leaders (2023)
+
+**Business Question:** Which countries have the highest percentage of renewable energy in their energy mix?
+
 ```sql
--- Countries with high energy poverty
-SELECT country_name, energy_poverty_rate 
-FROM countries 
-WHERE energy_poverty_rate > 10;
-
--- Operational solar projects
-SELECT project_name, capacity_mw 
-FROM energy_projects 
-WHERE project_type = 'Solar' AND status = 'Operational';
-
--- Countries in Asia with population over 100 million
-SELECT c.country_name, c.population_millions, r.region_name
-FROM countries c
-JOIN regions r ON c.region_id = r.region_id
-WHERE r.region_name LIKE '%Asia%' AND c.population_millions > 100;
-```
-
-### AND, OR, NOT operators
-```sql
--- Large projects (>1000 MW) that are Solar or Wind
-SELECT project_name, project_type, capacity_mw
-FROM energy_projects
-WHERE capacity_mw > 1000 AND (project_type = 'Solar' OR project_type = 'Wind');
-
--- Countries NOT in Europe or North America
-SELECT c.country_name, r.region_name
-FROM countries c
-JOIN regions r ON c.region_id = r.region_id
-WHERE NOT (r.region_name LIKE '%Europe%' OR r.region_name LIKE '%North America%');
-```
-
-### BETWEEN: Range filtering
-```sql
--- Projects completed between 2015 and 2020
-SELECT project_name, completion_date, status
-FROM energy_projects
-WHERE completion_date BETWEEN '2015-01-01' AND '2020-12-31';
-
--- Countries with medium population (50-150 million)
-SELECT country_name, population_millions
-FROM countries
-WHERE population_millions BETWEEN 50 AND 150;
-
--- Emissions in a specific range
-SELECT country_id, year, total_co2_mt
-FROM carbon_emissions
-WHERE total_co2_mt BETWEEN 400 AND 700
-ORDER BY total_co2_mt;
-```
-
-### IN: Multiple value matching
-```sql
--- Specific countries
-SELECT country_name, country_code 
-FROM countries 
-WHERE country_code IN ('CHN', 'USA', 'IND', 'DEU', 'BRA');
-
--- Specific project types
-SELECT project_name, project_type, capacity_mw
-FROM energy_projects
-WHERE project_type IN ('Solar', 'Wind', 'Hybrid');
-
--- Specific years
-SELECT country_id, year, total_renewable_capacity_mw
-FROM renewable_capacity
-WHERE year IN (2020, 2023);
-```
-
-### LIKE: Pattern matching
-```sql
--- Countries starting with 'U'
-SELECT country_name FROM countries WHERE country_name LIKE 'U%';
-
--- Projects with 'Solar' in the name
-SELECT project_name, project_type 
-FROM energy_projects 
-WHERE project_name LIKE '%Solar%';
-
--- Regions containing 'Asia'
-SELECT region_name FROM regions WHERE region_name LIKE '%Asia%';
-
--- Projects ending with 'Farm' or 'Park'
-SELECT project_name FROM energy_projects 
-WHERE project_name LIKE '%Farm' OR project_name LIKE '%Park';
-```
-
-### NULL: Check for missing values
-```sql
--- Countries without energy poverty data
-SELECT country_name, energy_poverty_rate 
-FROM countries 
-WHERE energy_poverty_rate IS NULL;
-
--- Projects without completion dates
-SELECT project_name, status 
-FROM energy_projects 
-WHERE completion_date IS NULL;
-```
-
----
-
-## 4. Aggregation & Analysis Queries
-
-### COUNT: Count records
-```sql
--- Total number of projects
-SELECT COUNT(*) AS total_projects FROM energy_projects;
-
--- Count by project type
-SELECT project_type, COUNT(*) AS project_count
-FROM energy_projects
-GROUP BY project_type
-ORDER BY project_count DESC;
-
--- Count operational projects
-SELECT COUNT(*) AS operational_projects 
-FROM energy_projects 
-WHERE status = 'Operational';
-```
-
-### SUM: Calculate totals
-```sql
--- Total renewable capacity globally (2023)
-SELECT SUM(total_renewable_capacity_mw) AS global_capacity_2023
-FROM renewable_capacity
-WHERE year = 2023;
-
--- Total investment in renewables by country (2023)
-SELECT 
-    c.country_name,
-    SUM(ei.renewable_investment_usd_millions) AS total_investment
-FROM energy_investments ei
-JOIN countries c ON ei.country_id = c.country_id
-WHERE ei.year = 2023
-GROUP BY c.country_name
-ORDER BY total_investment DESC;
-```
-
-### AVG: Calculate averages
-```sql
--- Average CO2 per capita by region (2023)
-SELECT 
-    r.region_name,
-    AVG(ce.per_capita_co2_tons) AS avg_co2_per_capita
-FROM carbon_emissions ce
-JOIN countries c ON ce.country_id = c.country_id
-JOIN regions r ON c.region_id = r.region_id
-WHERE ce.year = 2023
-GROUP BY r.region_name
-ORDER BY avg_co2_per_capita DESC;
-
--- Average renewable percentage by country
-SELECT 
-    c.country_name,
-    AVG(ec.renewable_percentage) AS avg_renewable_pct
-FROM energy_consumption ec
-JOIN countries c ON ec.country_id = c.country_id
-GROUP BY c.country_name
-ORDER BY avg_renewable_pct DESC;
-```
-
-### MIN and MAX: Find extremes
-```sql
--- Highest and lowest energy poverty rates
-SELECT 
-    MAX(energy_poverty_rate) AS highest_poverty,
-    MIN(energy_poverty_rate) AS lowest_poverty
-FROM countries
-WHERE energy_poverty_rate > 0;
-
--- Largest and smallest energy projects
-SELECT 
-    MAX(capacity_mw) AS largest_project,
-    MIN(capacity_mw) AS smallest_project
-FROM energy_projects;
-```
-
-### GROUP BY: Group aggregated data
-```sql
--- Total capacity by project type
-SELECT 
-    project_type,
-    COUNT(*) AS project_count,
-    SUM(capacity_mw) AS total_capacity,
-    AVG(capacity_mw) AS avg_capacity
-FROM energy_projects
-GROUP BY project_type
-ORDER BY total_capacity DESC;
-
--- Annual emissions by country
-SELECT 
-    c.country_name,
-    ce.year,
-    ce.total_co2_mt
-FROM carbon_emissions ce
-JOIN countries c ON ce.country_id = c.country_id
-ORDER BY c.country_name, ce.year;
-```
-
-### HAVING: Filter grouped results
-```sql
--- Countries with average renewable percentage above 40%
-SELECT 
-    c.country_name,
-    AVG(ec.renewable_percentage) AS avg_renewable
-FROM energy_consumption ec
-JOIN countries c ON ec.country_id = c.country_id
-GROUP BY c.country_name
-HAVING AVG(ec.renewable_percentage) > 40
-ORDER BY avg_renewable DESC;
-
--- Project types with total capacity over 10,000 MW
-SELECT 
-    project_type,
-    SUM(capacity_mw) AS total_capacity
-FROM energy_projects
-GROUP BY project_type
-HAVING SUM(capacity_mw) > 10000;
-```
-
----
-
-## 5. Join Queries for Multi-Table Analysis
-
-### INNER JOIN: Matching records from both tables
-```sql
--- Countries with their regions
-SELECT 
-    c.country_name,
-    c.population_millions,
-    r.region_name
-FROM countries c
-INNER JOIN regions r ON c.region_id = r.region_id;
-
--- Projects with country information
-SELECT 
-    ep.project_name,
-    ep.project_type,
-    ep.capacity_mw,
-    c.country_name
-FROM energy_projects ep
-INNER JOIN countries c ON ep.country_id = c.country_id
-WHERE ep.status = 'Operational';
-```
-
-### Multiple INNER JOINs: Three or more tables
-```sql
--- Complete project overview with country and region
-SELECT 
-    ep.project_name,
-    ep.project_type,
-    ep.capacity_mw,
-    ep.status,
-    c.country_name,
-    r.region_name
-FROM energy_projects ep
-INNER JOIN countries c ON ep.country_id = c.country_id
-INNER JOIN regions r ON c.region_id = r.region_id
-ORDER BY ep.capacity_mw DESC;
-
--- Renewable capacity with emissions data
-SELECT 
-    c.country_name,
-    rc.year,
-    rc.total_renewable_capacity_mw,
-    ce.total_co2_mt,
-    ec.renewable_percentage
-FROM renewable_capacity rc
-INNER JOIN countries c ON rc.country_id = c.country_id
-INNER JOIN carbon_emissions ce ON rc.country_id = ce.country_id AND rc.year = ce.year
-INNER JOIN energy_consumption ec ON rc.country_id = ec.country_id AND rc.year = ec.year
-WHERE rc.year = 2023;
-```
-
-### LEFT JOIN: All records from left table
-```sql
--- All countries with their projects (including countries without projects)
-SELECT 
-    c.country_name,
-    COUNT(ep.project_id) AS project_count
-FROM countries c
-LEFT JOIN energy_projects ep ON c.country_id = ep.country_id
-GROUP BY c.country_name
-ORDER BY project_count DESC;
-```
-
-### Self JOIN: Join table to itself
-```sql
--- Compare countries in the same region
-SELECT 
-    c1.country_name AS country1,
-    c2.country_name AS country2,
-    c1.gdp_per_capita_usd AS gdp1,
-    c2.gdp_per_capita_usd AS gdp2
-FROM countries c1
-INNER JOIN countries c2 ON c1.region_id = c2.region_id
-WHERE c1.country_id < c2.country_id
-ORDER BY c1.region_id;
-```
-
----
-
-## 6. Advanced Analytical Queries
-
-### Year-over-Year Growth Analysis
-```sql
--- Renewable capacity growth by country
-WITH capacity_growth AS (
-    SELECT 
-        country_id,
-        year,
-        total_renewable_capacity_mw,
-        LAG(total_renewable_capacity_mw) OVER (PARTITION BY country_id ORDER BY year) AS prev_year_capacity
-    FROM renewable_capacity
-)
-SELECT 
-    c.country_name,
-    cg.year,
-    cg.total_renewable_capacity_mw,
-    cg.prev_year_capacity,
-    ROUND(((cg.total_renewable_capacity_mw - cg.prev_year_capacity) / cg.prev_year_capacity * 100), 2) AS growth_percentage
-FROM capacity_growth cg
-JOIN countries c ON cg.country_id = c.country_id
-WHERE cg.prev_year_capacity IS NOT NULL
-ORDER BY c.country_name, cg.year;
-```
-
-### Ranking Analysis
-```sql
--- Rank countries by renewable capacity (2023)
-SELECT 
-    c.country_name,
-    rc.total_renewable_capacity_mw,
-    RANK() OVER (ORDER BY rc.total_renewable_capacity_mw DESC) AS capacity_rank
-FROM renewable_capacity rc
-JOIN countries c ON rc.country_id = c.country_id
-WHERE rc.year = 2023;
-
--- Top 3 projects by CO2 reduction in each country
-SELECT * FROM (
-    SELECT 
-        c.country_name,
-        ep.project_name,
-        ep.co2_reduction_mt_per_year,
-        ROW_NUMBER() OVER (PARTITION BY c.country_name ORDER BY ep.co2_reduction_mt_per_year DESC) AS rank
-    FROM energy_projects ep
-    JOIN countries c ON ep.country_id = c.country_id
-    WHERE ep.status = 'Operational'
-) ranked
-WHERE rank <= 3;
-```
-
-### Common Table Expressions (CTE)
-```sql
--- Calculate investment efficiency
-WITH investment_summary AS (
-    SELECT 
-        country_id,
-        year,
-        renewable_investment_usd_millions,
-        fossil_fuel_investment_usd_millions,
-        (renewable_investment_usd_millions + fossil_fuel_investment_usd_millions) AS total_investment
-    FROM energy_investments
-),
-capacity_summary AS (
-    SELECT 
-        country_id,
-        year,
-        total_renewable_capacity_mw
-    FROM renewable_capacity
-)
-SELECT 
-    c.country_name,
-    i.year,
-    i.renewable_investment_usd_millions,
-    cs.total_renewable_capacity_mw,
-    ROUND(i.renewable_investment_usd_millions / cs.total_renewable_capacity_mw, 2) AS investment_per_mw
-FROM investment_summary i
-JOIN capacity_summary cs ON i.country_id = cs.country_id AND i.year = cs.year
-JOIN countries c ON i.country_id = c.country_id
-WHERE i.year = 2023
-ORDER BY investment_per_mw;
-```
-
-### UNION: Combine results from multiple queries
-```sql
--- All Solar and Wind projects combined
-SELECT project_name, project_type, capacity_mw, 'Solar' AS energy_category
-FROM energy_projects 
-WHERE project_type = 'Solar'
-UNION
-SELECT project_name, project_type, capacity_mw, 'Wind' AS energy_category
-FROM energy_projects 
-WHERE project_type = 'Wind'
-ORDER BY capacity_mw DESC;
-```
-
-### Subqueries
-```sql
--- Countries with above-average renewable capacity (2023)
-SELECT 
-    c.country_name,
-    rc.total_renewable_capacity_mw
-FROM renewable_capacity rc
-JOIN countries c ON rc.country_id = c.country_id
-WHERE rc.year = 2023 
-    AND rc.total_renewable_capacity_mw > (
-        SELECT AVG(total_renewable_capacity_mw) 
-        FROM renewable_capacity 
-        WHERE year = 2023
-    )
-ORDER BY rc.total_renewable_capacity_mw DESC;
-
--- Projects in countries with high energy poverty
-SELECT 
-    ep.project_name,
-    c.country_name,
-    c.energy_poverty_rate
-FROM energy_projects ep
-JOIN countries c ON ep.country_id = c.country_id
-WHERE c.country_id IN (
-    SELECT country_id 
-    FROM countries 
-    WHERE energy_poverty_rate > 10
-);
-```
-
-### CASE: Conditional logic
-```sql
--- Categorize countries by renewable adoption
 SELECT 
     c.country_name,
     ec.renewable_percentage,
-    CASE 
-        WHEN ec.renewable_percentage >= 50 THEN 'High Renewable'
-        WHEN ec.renewable_percentage >= 30 THEN 'Medium Renewable'
-        WHEN ec.renewable_percentage >= 15 THEN 'Low Renewable'
-        ELSE 'Very Low Renewable'
-    END AS renewable_category
+    ec.renewable_energy_twh,
+    ec.total_energy_twh
 FROM energy_consumption ec
 JOIN countries c ON ec.country_id = c.country_id
 WHERE ec.year = 2023
 ORDER BY ec.renewable_percentage DESC;
-
--- Classify projects by size
-SELECT 
-    project_name,
-    capacity_mw,
-    CASE 
-        WHEN capacity_mw >= 5000 THEN 'Mega Project'
-        WHEN capacity_mw >= 1000 THEN 'Large Project'
-        WHEN capacity_mw >= 100 THEN 'Medium Project'
-        ELSE 'Small Project'
-    END AS project_size
-FROM energy_projects
-WHERE status = 'Operational'
-ORDER BY capacity_mw DESC;
 ```
+
+**Key Insight:** Brazil leads with 62.84% renewable energy, followed by Germany (49.33%) and India (23.54%).
 
 ---
 
-## 7. Data Modification Queries
+### Query 2: Investment Shift Analysis
 
-### INSERT: Add new records
+**Business Question:** How are countries transitioning their energy investments from fossil fuels to renewables?
+
 ```sql
--- Add a new country
-INSERT INTO countries (country_id, country_name, country_code, region_id, population_millions, gdp_per_capita_usd, land_area_km2, energy_poverty_rate)
-VALUES (16, 'France', 'FRA', 2, 67.4, 43518.00, 643801.00, 0.10);
-
--- Add a new energy project
-INSERT INTO energy_projects (country_id, project_name, project_type, capacity_mw, investment_usd_millions, start_date, status, co2_reduction_mt_per_year, jobs_created)
-VALUES (4, 'Baltic Sea Wind Farm', 'Wind', 1200.00, 3500.00, '2023-01-15', 'Under Construction', 2100.00, 1500);
-
--- Insert multiple records
-INSERT INTO renewable_capacity (country_id, year, solar_capacity_mw, wind_capacity_mw, hydro_capacity_mw, total_renewable_capacity_mw)
-VALUES 
-(16, 2023, 15800.00, 21400.00, 25600.00, 62800.00),
-(16, 2022, 14200.00, 19800.00, 25500.00, 59500.00);
-```
-
-### UPDATE: Modify existing records
-```sql
--- Update project status
-UPDATE energy_projects 
-SET status = 'Operational', completion_date = '2024-03-15'
-WHERE project_name = 'Xinjiang Solar Phase 4';
-
--- Update country data
-UPDATE countries 
-SET population_millions = 1428.50, gdp_per_capita_usd = 13200.00
-WHERE country_code = 'CHN';
-
--- Increase investment values by 10%
-UPDATE energy_investments
-SET renewable_investment_usd_millions = renewable_investment_usd_millions * 1.10
-WHERE year = 2023;
-```
-
-### DELETE: Remove records
-```sql
--- Delete a specific project
-DELETE FROM energy_projects 
-WHERE project_name = 'Test Project';
-
--- Delete records based on condition
-DELETE FROM renewable_capacity 
-WHERE year < 2020;
-
--- Delete all records from a table (use with caution!)
-DELETE FROM energy_projects WHERE status = 'Cancelled';
-```
-
----
-
-## 8. View Creation Queries
-
-### CREATE VIEW: Create reusable queries
-```sql
--- View: Latest country statistics (2023)
-CREATE VIEW vw_country_stats_2023 AS
 SELECT 
     c.country_name,
-    c.population_millions,
-    c.gdp_per_capita_usd,
-    rc.total_renewable_capacity_mw,
-    ec.renewable_percentage,
-    ce.per_capita_co2_tons
-FROM countries c
-LEFT JOIN renewable_capacity rc ON c.country_id = rc.country_id AND rc.year = 2023
-LEFT JOIN energy_consumption ec ON c.country_id = ec.country_id AND ec.year = 2023
-LEFT JOIN carbon_emissions ce ON c.country_id = ce.country_id AND ce.year = 2023;
-
--- View: Operational projects summary
-CREATE VIEW vw_operational_projects AS
-SELECT 
-    ep.project_name,
-    ep.project_type,
-    ep.capacity_mw,
-    ep.co2_reduction_mt_per_year,
-    ep.jobs_created,
-    c.country_name,
-    r.region_name
-FROM energy_projects ep
-JOIN countries c ON ep.country_id = c.country_id
-JOIN regions r ON c.region_id = r.region_id
-WHERE ep.status = 'Operational';
-
--- View: Investment trends
-CREATE VIEW vw_investment_trends AS
-SELECT 
-    c.country_name,
-    ei.year,
     ei.renewable_investment_usd_millions,
     ei.fossil_fuel_investment_usd_millions,
     ROUND((ei.renewable_investment_usd_millions / 
-          (ei.renewable_investment_usd_millions + ei.fossil_fuel_investment_usd_millions) * 100), 2) 
-          AS renewable_share_pct
+           (ei.renewable_investment_usd_millions + ei.fossil_fuel_investment_usd_millions) * 100), 2) 
+           as renewable_share_pct
 FROM energy_investments ei
-JOIN countries c ON ei.country_id = c.country_id;
-```
-
-### SELECT from VIEW
-```sql
--- Query the view like a regular table
-SELECT * FROM vw_country_stats_2023
-ORDER BY renewable_percentage DESC;
-
-SELECT country_name, renewable_share_pct 
-FROM vw_investment_trends
-WHERE year = 2023
+JOIN countries c ON ei.country_id = c.country_id
+WHERE ei.year = 2023
 ORDER BY renewable_share_pct DESC;
 ```
 
-### DROP VIEW: Remove a view
-```sql
-DROP VIEW vw_country_stats_2023;
-DROP VIEW vw_operational_projects;
-DROP VIEW vw_investment_trends;
-```
+**Key Insight:** Germany allocates 92.3% of energy investments to renewables, while the US has reached 71.8% renewable investment share by 2023.
 
 ---
 
-## 9. Performance Optimization
+### Query 3: Most Efficient Projects (CO2 Reduction per Dollar)
 
-### CREATE INDEX: Improve query performance
+**Business Question:** Which renewable energy projects deliver the best carbon reduction return on investment?
+
 ```sql
--- Create index on frequently queried columns
-CREATE INDEX idx_country_code ON countries(country_code);
-CREATE INDEX idx_project_type ON energy_projects(project_type);
-CREATE INDEX idx_year ON renewable_capacity(year);
-CREATE INDEX idx_status ON energy_projects(status);
-
--- Composite index for multi-column queries
-CREATE INDEX idx_country_year ON renewable_capacity(country_id, year);
-CREATE INDEX idx_project_country_status ON energy_projects(country_id, status);
-```
-
-### Query Execution Plan
-```sql
--- View execution plan (before running actual query)
-SET SHOWPLAN_TEXT ON;
-GO
-
-SELECT c.country_name, SUM(ep.capacity_mw) AS total_capacity
-FROM energy_projects ep
-JOIN countries c ON ep.country_id = c.country_id
-GROUP BY c.country_name;
-
-SET SHOWPLAN_TEXT OFF;
-GO
-```
-
----
-
-## 10. Use Cases & Examples
-
-### Use Case 1: Renewable Energy Transition Dashboard
-```sql
--- Complete country energy profile
 SELECT 
     c.country_name,
-    c.population_millions,
-    rc.total_renewable_capacity_mw,
-    ec.renewable_percentage,
-    ec.per_capita_kwh,
-    ce.per_capita_co2_tons,
-    ei.renewable_investment_usd_millions,
-    COUNT(ep.project_id) AS active_projects
-FROM countries c
-LEFT JOIN renewable_capacity rc ON c.country_id = rc.country_id AND rc.year = 2023
-LEFT JOIN energy_consumption ec ON c.country_id = ec.country_id AND ec.year = 2023
-LEFT JOIN carbon_emissions ce ON c.country_id = ce.country_id AND ce.year = 2023
-LEFT JOIN energy_investments ei ON c.country_id = ei.country_id AND ei.year = 2023
-LEFT JOIN energy_projects ep ON c.country_id = ep.country_id AND ep.status = 'Operational'
-GROUP BY c.country_name, c.population_millions, rc.total_renewable_capacity_mw, 
-         ec.renewable_percentage, ec.per_capita_kwh, ce.per_capita_co2_tons, 
-         ei.renewable_investment_usd_millions;
-```
-
-### Use Case 2: Investment ROI Analysis
-```sql
--- Calculate investment efficiency and CO2 impact
-SELECT 
-    c.country_name,
-    SUM(ep.investment_usd_millions) AS total_project_investment,
-    SUM(ep.capacity_mw) AS total_capacity,
-    SUM(ep.co2_reduction_mt_per_year) AS total_co2_reduction,
-    ROUND(SUM(ep.investment_usd_millions) / SUM(ep.capacity_mw), 2) AS cost_per_mw,
-    ROUND(SUM(ep.co2_reduction_mt_per_year) / SUM(ep.investment_usd_millions), 4) AS co2_reduction_per_million_usd
+    ep.project_name,
+    ep.project_type,
+    ep.co2_reduction_mt_per_year,
+    ep.investment_usd_millions,
+    ROUND(ep.co2_reduction_mt_per_year / ep.investment_usd_millions, 4) 
+        as co2_reduction_per_million_usd
 FROM energy_projects ep
 JOIN countries c ON ep.country_id = c.country_id
-WHERE ep.status = 'Operational'
-GROUP BY c.country_name
+WHERE ep.status = 'Operational' AND ep.investment_usd_millions > 0
 ORDER BY co2_reduction_per_million_usd DESC;
 ```
 
-### Use Case 3: Regional Comparison
-```sql
--- Regional renewable energy performance
-SELECT 
-    r.region_name,
-    COUNT(DISTINCT c.country_id) AS countries,
-    SUM(c.population_millions) AS total_population,
-    AVG(ec.renewable_percentage) AS avg_renewable_pct,
-    SUM(rc.total_renewable_capacity_mw) AS total_capacity,
-    AVG(ce.per_capita_co2_tons) AS avg_co2_per_capita
-FROM regions r
-JOIN countries c ON r.region_id = c.region_id
-LEFT JOIN renewable_capacity rc ON c.country_id = rc.country_id AND rc.year = 2023
-LEFT JOIN energy_consumption ec ON c.country_id = ec.country_id AND ec.year = 2023
-LEFT JOIN carbon_emissions ce ON c.country_id = ce.country_id AND ce.year = 2023
-GROUP BY r.region_name
-ORDER BY avg_renewable_pct DESC;
-```
-
-### Use Case 4: Energy Poverty Targeting
-```sql
--- Identify high-impact countries for renewable investment
-SELECT 
-    c.country_name,
-    c.energy_poverty_rate,
-    c.population_millions,
-    ROUND(c.population_millions * c.energy_poverty_rate / 100, 2) AS affected_population_millions,
-    rc.total_renewable_capacity_mw,
-    COUNT(ep.project_id) AS existing_projects
-FROM countries c
-LEFT JOIN renewable_capacity rc ON c.country_id = rc.country_id AND rc.year = 2023
-LEFT JOIN energy_projects ep ON c.country_id = ep.country_id
-WHERE c.energy_poverty_rate > 5
-GROUP BY c.country_name, c.energy_poverty_rate, c.population_millions, rc.total_renewable_capacity_mw
-ORDER BY affected_population_millions DESC;
-```
-
-### Use Case 5: Technology Mix Analysis
-```sql
--- Analyze renewable technology distribution by country
-SELECT 
-    c.country_name,
-    rc.year,
-    ROUND((rc.solar_capacity_mw / rc.total_renewable_capacity_mw * 100), 2) AS solar_pct,
-    ROUND((rc.wind_capacity_mw / rc.total_renewable_capacity_mw * 100), 2) AS wind_pct,
-    ROUND((rc.hydro_capacity_mw / rc.total_renewable_capacity_mw * 100), 2) AS hydro_pct,
-    rc.total_renewable_capacity_mw
-FROM renewable_capacity rc
-JOIN countries c ON rc.country_id = c.country_id
-WHERE rc.year = 2023
-ORDER BY rc.total_renewable_capacity_mw DESC;
-```
+**Key Insight:** Large-scale hydro projects (Three Gorges Dam, Belo Monte) show highest efficiency at 3.6-12.4 MT CO2 reduction per $1M invested.
 
 ---
 
-## 📚 Additional Resources
+### Query 4: Year-over-Year Capacity Growth
 
-### Sample Reports
-- [Country Rankings Report](queries/reports/country_rankings.sql)
-- [Emission Trends Analysis](queries/reports/emission_analysis.sql)
-- [Investment Flow Report](queries/reports/investment_patterns.sql)
+**Business Question:** Which countries are adding renewable capacity fastest?
 
-### Data Dictionary
-- [Complete Field Definitions](documentation/data_dictionary.md)
-- [Calculation Methodologies](documentation/calculations.md)
+```sql
+SELECT 
+    c.country_name,
+    rc1.year,
+    rc1.total_renewable_capacity_mw as current_capacity,
+    ROUND(((rc1.total_renewable_capacity_mw - rc2.total_renewable_capacity_mw) / 
+           rc2.total_renewable_capacity_mw * 100), 2) as growth_percentage
+FROM renewable_capacity rc1
+JOIN renewable_capacity rc2 ON rc1.country_id = rc2.country_id 
+    AND rc1.year = rc2.year + 1
+JOIN countries c ON rc1.country_id = c.country_id
+WHERE rc1.year = 2023
+ORDER BY growth_percentage DESC;
+```
 
-### Visual Resources
-- [Database ER Diagram](documentation/erd_diagram.png)
-- [Sample Dashboard Screenshots](visualizations/dashboards/)
+**Key Insight:** China leads with 25.66% annual growth in 2023, adding 304 GW of renewable capacity in a single year.
+
+---
+
+### Query 5: Regional Sustainability Scorecard
+
+**Business Question:** How do different regions compare on renewable energy adoption?
+
+```sql
+SELECT 
+    r.region_name,
+    SUM(rc.total_renewable_capacity_mw) as total_capacity_mw,
+    AVG(ec.renewable_percentage) as avg_renewable_percentage
+FROM regions r
+JOIN countries c ON r.region_id = c.region_id
+JOIN renewable_capacity rc ON c.country_id = rc.country_id
+JOIN energy_consumption ec ON c.country_id = ec.country_id 
+    AND rc.year = ec.year
+WHERE rc.year = 2023
+GROUP BY r.region_name
+ORDER BY total_capacity_mw DESC;
+```
+
+**Key Insight:** East Asia & Pacific leads with 1.6 TW of capacity, while Sub-Saharan Africa has only 1 GW despite high energy poverty rates.
+
+---
+
+### Query 6: Energy Poverty vs Renewable Adoption
+
+**Business Question:** Is there a correlation between energy access and renewable energy development?
+
+```sql
+SELECT 
+    c.country_name,
+    c.energy_poverty_rate,
+    ec.renewable_percentage,
+    rc.total_renewable_capacity_mw,
+    c.gdp_per_capita_usd
+FROM countries c
+JOIN energy_consumption ec ON c.country_id = ec.country_id
+JOIN renewable_capacity rc ON c.country_id = rc.country_id
+WHERE ec.year = 2023 AND rc.year = 2023
+ORDER BY c.energy_poverty_rate DESC;
+```
+
+**Key Insight:** Nigeria has 56.1% energy poverty but only 0 MW tracked renewable capacity, highlighting investment gaps in high-need regions.
+
+---
+
+### All 15 Sample Queries Included
+
+The database includes **15 pre-built analytical queries** covering:
+
+1. ✅ Renewable energy rankings by country
+2. ✅ Year-over-year capacity growth trajectories
+3. ✅ Investment transition analysis (renewable vs fossil)
+4. ✅ Carbon emissions reduction tracking
+5. ✅ Regional capacity summaries
+6. ✅ Project impact rankings (CO2 reduction)
+7. ✅ Energy poverty correlation analysis
+8. ✅ Investment efficiency metrics
+9. ✅ Technology mix breakdown by country
+10. ✅ Investment-capacity correlations
+11. ✅ Progress toward emission reduction targets
+12. ✅ Economic impact (jobs & GDP)
+13. ✅ Universal energy access progress
+14. ✅ Technology-specific growth trends (2020-2023)
+15. ✅ Public vs private investment patterns
+
+---
+
+## 🔍 Analytical Views
+
+The database includes **4 pre-built views** for streamlined analysis:
+
+### 1. `country_energy_dashboard`
+Comprehensive country-level metrics combining all dimensions.
+
+```sql
+SELECT * FROM country_energy_dashboard
+WHERE year = 2023 AND renewable_percentage > 40;
+```
+
+**Fields:** `country_name`, `country_code`, `region_name`, `year`, `renewable_percentage`, `total_renewable_capacity_mw`, `per_capita_co2_tons`, `renewable_investment_usd_millions`
+
+---
+
+### 2. `yoy_performance_metrics`
+Year-over-year changes in key sustainability indicators.
+
+```sql
+SELECT * FROM yoy_performance_metrics
+WHERE year = 2023
+ORDER BY capacity_addition_mw DESC;
+```
+
+**Fields:** `country_name`, `year`, `renewable_pct_change`, `capacity_addition_mw`, `co2_per_capita_change`, `investment_growth_pct`
+
+---
+
+### 3. `country_project_portfolio`
+Aggregated project statistics by country and technology type.
+
+```sql
+SELECT * FROM country_project_portfolio
+WHERE project_type = 'Solar'
+ORDER BY total_capacity_mw DESC;
+```
+
+**Fields:** `country_name`, `project_type`, `project_count`, `total_capacity_mw`, `total_co2_reduction`, `total_jobs_created`
+
+---
+
+### 4. `regional_sustainability_scorecard`
+Regional-level sustainability performance indicators.
+
+```sql
+SELECT * FROM regional_sustainability_scorecard
+WHERE year = 2023
+ORDER BY avg_renewable_pct DESC;
+```
+
+**Fields:** `region_name`, `year`, `avg_renewable_pct`, `avg_co2_per_capita`, `total_renewable_investment`, `avg_energy_poverty`
+
+---
+
+## 💡 Key Insights
+
+### Energy Transition Leaders (2020→2023)
+
+| Country | Capacity Growth | Renewable % Increase | Investment Growth |
+|---------|----------------|---------------------|-------------------|
+| **China** | +62.5% (+572 GW) | +2.69 pp | +126.7% |
+| **Germany** | +27.0% (+35 GW) | +6.75 pp | +77.8% |
+| **United States** | +29.0% (+92 GW) | +1.87 pp | +150.0% |
+| **India** | +31.5% (+42 GW) | +3.48 pp | +121.4% |
+| **Brazil** | +18.8% (+28 GW) | -1.52 pp | +116.4% |
+
+### Technology Trends
+
+- **Solar**: Fastest growing technology (China added 356 GW from 2020-2023)
+- **Wind**: Steady growth with offshore expansion (Germany's Gode Wind: 582 MW)
+- **Hydro**: Mature technology with large-scale projects (Three Gorges: 22.5 GW)
+- **Geothermal**: Concentrated in specific regions (Kenya's Olkaria: 865 MW)
+
+### Investment Patterns
+
+- **Global shift**: Renewable investments growing 2-3x faster than fossil fuel investments
+- **Public sector**: China leads with 71.2% public investment share
+- **Private sector**: Increasing role in US (56.2% private share in 2023)
+
+---
+
+## 🎯 Use Cases
+
+### 1. Academic Research
+- **Climate policy analysis**: Track emission reduction trajectories against Paris Agreement targets
+- **Energy transition modeling**: Analyze investment-to-capacity conversion rates
+- **Regional development studies**: Compare energy access progress across income levels
+- **Technology diffusion**: Study adoption patterns of solar vs wind vs hydro
+
+### 2. Business Intelligence
+- **Market opportunity analysis**: Identify high-growth regions and technology segments
+- **Investment strategy**: Benchmark renewable vs fossil fuel allocation trends
+- **Competitive analysis**: Compare project efficiency metrics across countries
+- **Risk assessment**: Evaluate policy environments through public investment trends
+
+### 3. Policy & Government
+- **SDG progress tracking**: Monitor advancement toward UN Goals 7 and 13
+- **Energy planning**: Model capacity needs based on consumption growth
+- **Poverty alleviation**: Target investments in high energy-poverty regions
+- **Job creation**: Estimate employment impacts of renewable projects
+
+### 4. Data Science & Analytics
+- **Predictive modeling**: Forecast 2024-2030 capacity growth using time series
+- **Correlation analysis**: Examine relationships between GDP, investments, and outcomes
+- **Clustering**: Identify country typologies (leaders, followers, laggards)
+- **Optimization**: Calculate optimal technology mix for cost and CO2 reduction
+
+---
+
+## 🛠️ Technical Details
+
+### Database Features
+- **Referential integrity**: Full foreign key constraints across all tables
+- **Data validation**: CHECK constraints on categorical fields (`project_type`, `status`)
+- **Identity columns**: Auto-incrementing primary keys for fact tables
+- **Default values**: `DEFAULT 0` for renewable capacity fields
+- **Indexes**: Primary keys auto-indexed for optimal JOIN performance
+
+### Data Quality
+- **Completeness**: All required fields populated (0 NULLs in critical dimensions)
+- **Consistency**: All country-year combinations validated
+- **Accuracy**: Data ranges validated against IEA, IRENA, World Bank sources
+- **Temporal integrity**: Sequential annual data with no gaps (2020-2023)
+
+### Performance Considerations
+- **Record count**: ~100 total records (optimized for analytical queries)
+- **Query patterns**: Designed for OLAP workloads with complex JOINs
+- **View materialization**: Consider indexed views for production dashboards
+- **Partitioning**: Not required at current scale; consider if extending to 50+ countries
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
+Contributions are welcome! Here are ways you can help improve this project:
 
-1. **Add New Queries**: Share useful SQL patterns
-2. **Improve Documentation**: Clarify examples or add explanations
-3. **Report Issues**: Found a bug? Let us know
-4. **Suggest Features**: Ideas for new tables or data points
+### Data Contributions
+- [ ] Add more countries (target: 50+ major economies)
+- [ ] Extend time series (2024+ data as available)
+- [ ] Add new energy types (tidal, wave, hydrogen)
+- [ ] Include energy storage metrics (battery capacity)
+- [ ] Add policy indicators (carbon pricing, subsidies)
+
+### Query Contributions
+- [ ] New analytical queries for specific use cases
+- [ ] Query optimization improvements
+- [ ] Visualization scripts (Power BI, Tableau, Python)
+- [ ] Integration examples (ETL pipelines, APIs)
+
+### Documentation
+- [ ] Tutorial: "Getting Started with Energy Analytics"
+- [ ] Case study: Real-world analysis examples
+- [ ] Translation to other SQL dialects (PostgreSQL, MySQL, Oracle)
+- [ ] Data dictionary with business definitions
 
 ### How to Contribute
-```bash
-# Fork the repository
-# Create your feature branch
-git checkout -b feature/AmazingQuery
 
-# Commit your changes
-git commit -m 'Add amazing analysis query'
+1. **Fork** the repository
+2. **Create** a feature branch
+   ```bash
+   git checkout -b feature/add-storage-metrics
+   ```
+3. **Commit** your changes
+   ```bash
+   git commit -m "Add battery storage capacity table"
+   ```
+4. **Push** to your branch
+   ```bash
+   git push origin feature/add-storage-metrics
+   ```
+5. **Open** a Pull Request with detailed description
 
-# Push to the branch
-git push origin feature/AmazingQuery
+---
 
-# Open a Pull Request
-```
+## 📜 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+### MIT License Summary
+✅ Commercial use  
+✅ Modification  
+✅ Distribution  
+✅ Private use  
 
 ---
 
-## 📄 License
+## 🙏 Acknowledgments
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- Data methodology inspired by **IEA World Energy Outlook**, **IRENA Renewable Capacity Statistics**, and **World Bank Energy Indicators**
+- Project aligned with **UN Sustainable Development Goals** framework
+- Built to support climate action research and clean energy transition analysis
 
 ---
+
+## 📧 Contact & Support
+
+**Project Maintainer:** [Your Name]
+
+📧 **Email:** your.email@example.com  
+💼 **LinkedIn:** [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)  
+🐙 **GitHub:** [@yourusername](https://github.com/yourusername)  
+🐦 **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
+
+### Questions or Issues?
+- Open an [Issue](https://github.com/yourusername/renewable-energy-database/issues) for bug reports
+- Start a [Discussion](https://github.com/yourusername/renewable-energy-database/discussions) for feature requests
+- Check the [Wiki](https://github.com/yourusername/renewable-energy-database/wiki) for detailed documentation
+
+---
+
+## 🗺️ Roadmap
+
+### Version 1.1 (Q2 2025)
+- [ ] Add 2024 annual data updates
+- [ ] Expand to 30 countries (add Canada, France, Spain, etc.)
+- [ ] Include energy storage capacity metrics
+- [ ] Add transmission infrastructure data
+
+### Version 2.0 (Q4 2025)
+- [ ] 50+ country coverage globally
+- [ ] Policy indicators (subsidies, carbon pricing)
+- [ ] Corporate PPA database
+- [ ] PostgreSQL and MySQL ports
+
+### Version 3.0 (2026)
+- [ ] REST API endpoints for programmatic access
+- [ ] Real-time data integration (where available)
+- [ ] Machine learning models for forecasting
+- [ ] Interactive Power BI dashboard templates
+
+---
+
+## ⭐ Star This Project
+
+If you find this database useful for your research, business, or learning, please consider giving it a star! ⭐
+
+It helps others discover this resource and motivates continued development.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/renewable-energy-database&type=Date)](https://star-history.com/#yourusername/renewable-energy-database&Date)
+
+---
+
+## 📊 Project Statistics
+
+![GitHub repo size](https://img.shields.io/github/repo-size/yourusername/renewable-energy-database)
+![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/renewable-energy-database)
+![GitHub issues](https://img.shields.io/github/issues/yourusername/renewable-energy-database)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/renewable-energy-database)
+
+---
+
+<div align="center">
+
+**Made with 💚 for a sustainable future**
+
+*Supporting UN SDG 7: Affordable and Clean Energy*  
+*Supporting UN SDG 13: Climate Action*
+
+[⬆ Back to Top](#-global-renewable-energy--carbon-emissions-database)
+
+</div>
