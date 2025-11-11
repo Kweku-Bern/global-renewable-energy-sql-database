@@ -500,12 +500,12 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📧 Contact & Support
 
-**Project Maintainer:** [Your Name]
+**Project Maintainer:** [Bernard Okomfo]
 
-📧 **Email:** your.email@example.com  
-💼 **LinkedIn:** [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)  
-🐙 **GitHub:** [@yourusername](https://github.com/yourusername)  
-🐦 **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
+📧 **Email:** okomfobernard24@gmail.com  
+💼 **LinkedIn:** [linkedin.com/in/Bernard Okomfo](https://linkedin.com/in/BernardOkomfo)  
+🐙 **GitHub:** [@kweku-bern](https://github.com/kweku-bern)  
+
 
 ### Questions or Issues?
 - Open an [Issue](https://github.com/yourusername/renewable-energy-database/issues) for bug reports
